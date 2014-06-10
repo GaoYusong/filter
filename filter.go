@@ -134,10 +134,17 @@ func (f *FilterT) GetFilter() string {
 	return f.filter
 }
 
+func (f *FilterT) GetRPN() string {
+	return outputTokens(f.rpn)
+}
+
+func (f *FilterT) OK() bool {
+	return len(f.rpn) != 0
+}
+
 func (f *FilterT) Compile(filter string) error {
 	tokens, err := tokenize(filter)
 	if err != nil {
-		//fmt.Println(err)
 		return err
 	}
 
@@ -146,12 +153,12 @@ func (f *FilterT) Compile(filter string) error {
 	rpn, err := toRPN(tokens)
 
 	if err != nil {
-		//fmt.Println(err)
 		return err
 	}
 
 	//outputTokens(rpn)
 
+	f.filter = filter
 	f.rpn = rpn
 
 	return nil
@@ -417,24 +424,31 @@ func lexError(err error) (tokenT, int, error) {
 	return tokenT{}, 0, err
 }
 
-func outputTokens(tokens []tokenT) {
+func outputTokens(tokens []tokenT) string {
+	out := ""
 	for _, token := range tokens {
-		outputToken(token)
-		fmt.Print(" ")
+		if out != "" {
+			out += " "
+		}
+		out += outputToken(token)
 	}
-	fmt.Print("\n")
+	return out
 }
 
-func outputToken(token tokenT) {
+func outputToken(token tokenT) string {
 	switch token.t {
 	case token_value:
-		outputCidr(token.cidr)
+		return outputCidr(token.cidr)
 	default:
-		fmt.Print(tokenOut[token.t])
+		val, found := tokenOut[token.t]
+		if !found {
+			panic("token out is not found")
+		}
+		return val
 	}
 }
 
-func outputCidr(cidr cidrT) {
+func outputCidr(cidr cidrT) string {
 	i := 0
 	for ; i <= 32; i++ {
 		if cidr.mask == (-1)<<uint32(32-i) {
@@ -444,6 +458,6 @@ func outputCidr(cidr cidrT) {
 	if i > 32 {
 		panic(fmt.Sprint("malformed value token ", cidr))
 	}
-	fmt.Printf("%d.%d.%d.%d/%d",
+	return fmt.Sprintf("%d.%d.%d.%d/%d",
 		(cidr.ip>>24)&255, (cidr.ip>>16)&255, (cidr.ip>>8)&255, cidr.ip&255, i)
 }

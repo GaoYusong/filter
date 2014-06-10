@@ -21,5 +21,5 @@ func TestCompile(t *testing.T) {
 	if !filter.Check(ip) {
 		t.Error("check ip ", ip, " expected true")
 	}
-
+	
 }
