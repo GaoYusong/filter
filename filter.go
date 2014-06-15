@@ -24,24 +24,28 @@ type FilterT struct {
 }
 
 const (
-	token_space   = -1
-	token_unknown = 0
-	token_value   = 1
-	token_and     = 2
-	token_or      = 3
-	token_not     = 4
-	token_left    = 5
-	token_right   = 6
-	token_border  = 7
+	token_not_exsits = -2 // for errorTokenT
+	token_space      = -1
+	token_unknown    = 0
+	token_value      = 1
+	token_and        = 2
+	token_or         = 3
+	token_not        = 4
+	token_left       = 5
+	token_right      = 6
+	token_border     = 7
 )
 
 var tokenOut map[int]string = map[int]string{
-	token_border: "#",
-	token_left:   "(",
-	token_right:  ")",
-	token_and:    "and",
-	token_or:     "or",
-	token_not:    "not",
+	token_border:  "#",
+	token_left:    "(",
+	token_right:   ")",
+	token_and:     "and",
+	token_or:      "or",
+	token_not:     "not",
+	token_space:   "SPACE",
+	token_unknown: "UNKNOWN",
+	token_value:   "CIDR",
 }
 
 const (
@@ -113,6 +117,67 @@ var ranks map[int]map[int]int = map[int]map[int]int{
 	},
 }
 
+type errorTokenT struct {
+	msg  string
+	code int
+	t    int // token type
+	pos  int
+}
+
+const (
+	err_msg_filter         = "imcompleted filter string"
+	err_code_filter        = 1000
+	err_msg_no_values      = "no values"
+	err_code_no_values     = 1001
+	err_msg_brackets       = "unbalanced brackets"
+	err_code_brackets      = 1002
+	err_msg_charactor      = "unknown charactor"
+	err_code_charactor     = 1003
+	err_msg_mask           = "malformed mask, valid is 0~32"
+	err_code_mask          = 1004
+	err_msg_set_mask       = "must be a dotted quad ip when set mask"
+	err_code_set_mask      = 1005
+	err_msg_ip             = "number of ip addr domain must be 1~4"
+	err_code_ip            = 1006
+	err_msg_too_many_mask  = "too many /"
+	err_code_too_many_mask = 1007
+	err_msg_ip_domain      = "ip domain must be 0~255"
+	err_code_ip_domain     = 1008
+	err_msg_token          = "malformed token"
+	err_code_token         = 1009
+)
+
+var errorTokenMsg map[int]string = map[int]string{
+	err_code_filter:        err_msg_filter,
+	err_code_no_values:     err_msg_no_values,
+	err_code_brackets:      err_msg_brackets,
+	err_code_charactor:     err_msg_charactor,
+	err_code_mask:          err_msg_mask,
+	err_code_set_mask:      err_msg_set_mask,
+	err_code_ip:            err_msg_ip,
+	err_code_too_many_mask: err_msg_too_many_mask,
+	err_code_ip_domain:     err_msg_ip_domain,
+	err_code_token:         err_msg_token,
+}
+
+func NewErrorToken(code int, t int, pos int) error {
+	msg := "[" + strconv.FormatInt(int64(code), 10) + "]"
+	if t != token_not_exsits {
+		msg += " token \"" + tokenOut[t] + "\" in pos " + strconv.FormatInt(int64(pos), 10)
+	}
+	msg += ", " + errorTokenMsg[code]
+	return &errorTokenT{msg: msg, code: code, t: t, pos: pos}
+}
+
+func (e *errorTokenT) Error() string {
+	return e.msg
+}
+
+const (
+	err_msg_parse_host_ip_domain = "ip domain must be 0~255"
+	err_msg_parse_host_malformed = "malformed"
+)
+
 func ParseHost(rawIP string) (int, error) {
 	ip := strings.Split(rawIP, ".")
 	if len(ip) == 4 {
@@ -120,13 +185,13 @@ func ParseHost(rawIP string) (int, error) {
 		for i := 0; i < 4; i++ {
 			ipInt, err := strconv.ParseInt(ip[i], 10, 0)
 			if err != nil || ipInt < 0 || ipInt > 255 {
-				return 0, errors.New("ip domain must be 0~255")
+				return 0, errors.New(err_msg_parse_host_ip_domain)
 			}
 			r = (r << 8) | int(ipInt)
 		}
 		return r, nil
 	} else {
-		return 0, errors.New("malformed")
+		return 0, errors.New(err_msg_parse_host_malformed)
 	}
 }
 
@@ -175,7 +240,7 @@ func (f *FilterT) Check(ip int) bool {
 		top := len(stack)
 		switch token.t {
 		case token_value:
-			stack = append(stack, CheckIn(ip, token.cidr))
+			stack = append(stack, checkIn(ip, token.cidr))
 		case token_not:
 			stack[top-1] = !stack[top-1]
 		case token_and:
@@ -192,12 +257,12 @@ func (f *FilterT) Check(ip int) bool {
 	if len(stack) != 1 {
 		panic("illegal rpn")
 	}
-	
+
 	return stack[0]
 }
 
-func CheckIn(ip int, cidr cidrT) bool {
-	return (ip & cidr.mask) == cidr.ip
+func checkIn(ip int, cidr cidrT) bool {
+	return (ip & cidr.mask) == (cidr.ip & cidr.mask)
 }
 
 func tokenize(filter string) ([]tokenT, error) {
@@ -218,20 +283,17 @@ func tokenize(filter string) ([]tokenT, error) {
 
 func toRPN(tokens []tokenT) ([]tokenT, error) {
 	var rpn, stack []tokenT
+	var valsPos []int
 
 	stack = append(stack, tokenT{t: token_border})
 	tokens = append(tokens, tokenT{t: token_border})
 
-	vals := 0
-
 	for _, token := range tokens {
-
 		if token.t == token_value {
 			rpn = append(rpn, token)
-			vals++
+			valsPos = append(valsPos, token.pos)
 		} else {
 			top := len(stack)
-
 			for ; ranks[stack[top-1].t][token.t] == rank_greater; top-- {
 				t := stack[top-1].t
 				var needVals int
@@ -243,14 +305,39 @@ func toRPN(tokens []tokenT) ([]tokenT, error) {
 				case token_or:
 					needVals = 2
 				default:
-					panic("token illegal")
+					panic("illegal token")
+				}
+				isNoValues := false
+				valsLen := len(valsPos)
+				valsTop := valsLen
+				var valPos int
+				if valsLen < needVals {
+					isNoValues = true
+				} else {
+					switch needVals {
+					case 1:
+						valPos = valsPos[valsTop-1]
+						if !(stack[top-1].pos < valsPos[valsTop-1]) {
+							isNoValues = true
+						}
+
+					case 2:
+						valPos = valsPos[valsTop-2]
+						if !(stack[top-1].pos > valsPos[valsTop-2] && stack[top-1].pos < valsPos[valsTop-1]) {
+							isNoValues = true
+						}
+					default:
+						panic("illegal needVals")
+					}
 				}
 
-				if vals < needVals {
-					return toRPNError(stack[top-1], "no values")
+				if isNoValues {
+					return toRPNError(stack[top-1], err_code_no_values)
 				}
 
-				vals = vals - needVals + 1
+				valsPos = valsPos[0 : valsLen-needVals]
+				valsPos = append(valsPos, valPos)
+
 				rpn = append(rpn, stack[top-1])
 			}
 
@@ -265,7 +352,7 @@ func toRPN(tokens []tokenT) ([]tokenT, error) {
 				if token.t == token_right {
 					brackets = token
 				}
-				return toRPNError(brackets, "unbalanced brackets")
+				return toRPNError(brackets, err_code_brackets)
 			default:
 				panic("rank illegal")
 			}
@@ -276,15 +363,15 @@ func toRPN(tokens []tokenT) ([]tokenT, error) {
 		panic("stack is not empty")
 	}
 
-	if vals != 1 {
-		return nil, errors.New("imcompleted filter string")
+	if len(valsPos) != 1 {
+		return nil, NewErrorToken(err_code_filter, token_not_exsits, -1)
 	}
 
 	return rpn, nil
 }
 
-func toRPNError(token tokenT, msg string) ([]tokenT, error) {
-	return nil, errors.New(fmt.Sprint("token \"", tokenOut[token.t], "\" in pos ", token.pos, ", ", msg))
+func toRPNError(token tokenT, code int) ([]tokenT, error) {
+	return nil, NewErrorToken(code, token.t, token.pos)
 }
 
 func lex(filter *string, i int) (tokenT, int, error) {
@@ -312,7 +399,7 @@ func lex(filter *string, i int) (tokenT, int, error) {
 		case ')':
 			return lexOP(filter, i, ")")
 		default:
-			return lexError(errors.New(fmt.Sprint("unknown charactor in pos ", i)))
+			return lexError(NewErrorToken(err_code_charactor, token_unknown, i))
 		}
 	}
 }
@@ -335,21 +422,21 @@ func lexCIDR(filter *string, pos int) (tokenT, int, error) {
 		if len(ip) == 4 {
 			mask, err := strconv.ParseInt(ipmask[1], 10, 0)
 			if err != nil || mask < 0 || mask > 32 {
-				return lexCIDRError(pos, "malformed mask")
+				return lexCIDRError(pos, err_code_mask)
 			}
 			return cidrToken(ip, int(mask), pos, i)
 		} else {
-			return lexCIDRError(pos, "need a dotted quad ip when set mask")
+			return lexCIDRError(pos, err_code_set_mask)
 		}
 	} else if len(ipmask) == 1 {
 		ip := strings.Split(ipmask[0], ".")
 		if len(ip) >= 1 && len(ip) <= 4 {
 			return cidrToken(ip, len(ip)*8, pos, i)
 		} else {
-			return lexCIDRError(pos, "malformed ip")
+			return lexCIDRError(pos, err_code_ip)
 		}
 	} else {
-		return lexCIDRError(pos, "too many /")
+		return lexCIDRError(pos, err_code_too_many_mask)
 	}
 }
 
@@ -362,7 +449,7 @@ func cidrToken(rawIP []string, mask int, pos int, next_i int) (tokenT, int, erro
 		if i < len(rawIP) {
 			ip, err := strconv.ParseInt(rawIP[i], 10, 0)
 			if err != nil || ip < 0 || ip > 255 {
-				return lexCIDRError(pos, "ip domain must be 0~255")
+				return lexCIDRError(pos, err_code_ip_domain)
 			}
 			cidr.ip |= int(ip)
 		}
@@ -377,15 +464,15 @@ func cidrToken(rawIP []string, mask int, pos int, next_i int) (tokenT, int, erro
 	}, next_i, nil
 }
 
-func lexCIDRError(pos int, msg string) (tokenT, int, error) {
-	return lexError(errors.New(fmt.Sprint("malformed cidr begin in pos ", pos, ", ", msg)))
+func lexCIDRError(pos int, code int) (tokenT, int, error) {
+	return lexError(NewErrorToken(code, token_value, pos))
 }
 
 func lexOP(filter *string, pos int, op string) (tokenT, int, error) {
 	if equal(filter, pos, op) {
 		return tokenT{t: toOP(op), pos: pos}, (pos + len(op)), nil
 	} else {
-		return lexError(errors.New(fmt.Sprint("malformed ", op, " in pos ", pos)))
+		return lexError(NewErrorToken(err_code_token, toOP(op), pos))
 	}
 }
 
@@ -415,7 +502,7 @@ func isSpace(c byte) bool {
 
 func equal(filter *string, pos int, obj string) bool {
 	if pos+len(obj) <= len(*filter) {
-		return obj == strings.ToLower((*filter)[pos:pos + len(obj)])
+		return obj == strings.ToLower((*filter)[pos:pos+len(obj)])
 	}
 	return false
 }
@@ -436,15 +523,16 @@ func outputTokens(tokens []tokenT) string {
 }
 
 func outputToken(token tokenT) string {
+	pos := "[" + strconv.FormatInt(int64(token.pos), 10) + "]"
 	switch token.t {
 	case token_value:
-		return outputCidr(token.cidr)
+		return outputCidr(token.cidr) + pos
 	default:
 		val, found := tokenOut[token.t]
 		if !found {
 			panic("token out is not found")
 		}
-		return val
+		return val + pos
 	}
 }
 
