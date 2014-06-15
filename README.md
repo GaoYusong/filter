@@ -7,6 +7,7 @@ The library is stable and strong, the coverage of test is 95.3%.
 ## Use it
 
 set your env GOPATH
+
 go get github.com/GaoYusong/filter
 
 ## Network Address
@@ -18,9 +19,9 @@ Network address can be abbreviated, etc 192.168.1.0 is the abbreviation for 192.
 Priority decreases from top to bottom, and support parentheses, recommend the use of that.
 
 level|Operator     | Associativity
----------------------------
+-----|-------------|-------------------
 1    |not          | right
-2    |and,&&,or,|| | left
+2    |and,&&,or,&#124;&#124; | left
 
 ## Example
 
