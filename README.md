@@ -4,7 +4,7 @@ IP filter library inspired by pcap filter.
 
 The library is stable and strong, the coverage of test is 95.3%.
 
-## Use it
+## Use It
 
 set your env GOPATH
 
