@@ -217,7 +217,7 @@ func TestCompile(t *testing.T) {
 	for content, rpn := range map[string][]tokenT{
 		// test tokenize and toRPN
 		"127.0.0.1/24": {newV("127.0.0.1", 24, 0)},
-		"127.0.0.1/24 And 0.0.0.0/8 or (127 or 192 oR (10 and 10.232.64)) and nOt 172.24 and NoT 172.178.88.1/0 and (172.0.0.1/32 and not not 11.12.13.14/15)and10.1.1.1  oR (12)    Or notnot17  && 17 || 12 || !!13": {
+		"127.0.0.1/24 And 0.0.0.0/8 or (127 or 192 oR (10 and 10.232.64)) and nOt 172.24 and NoT 172.178.88.1/0 and (172.0.0.1/32 and not not 11.12.13.14/15)and10.1.1.1  oR (12)    Or notnot17  && 17 || 12 || !!13.11.12.13/27": {
 			newV("127.0.0.1", 24, 0), newV("0.0.0.0", 8, 17), newOP(token_and, 13),
 			newV("127.0.0.0", 8, 31), newV("192.0.0.0", 8, 38), newOP(token_or, 35), newV("10.0.0.0", 8, 46),
 			newV("10.232.64.0", 24, 53), newOP(token_and, 49), newOP(token_or, 42), newOP(token_or, 27),
@@ -226,7 +226,7 @@ func TestCompile(t *testing.T) {
 			newOP(token_not, 129), newOP(token_not, 125), newOP(token_and, 121), newOP(token_and, 103), newV("10.1.1.1", 32, 151),
 			newOP(token_and, 148), newV("12.0.0.0", 8, 165), newOP(token_or, 161), newV("17.0.0.0", 8, 181),
 			newOP(token_not, 178), newOP(token_not, 175), newOP(token_or, 172), newV("17.0.0.0", 8, 188), newOP(token_and, 185),
-			newV("12.0.0.0", 8, 194), newOP(token_or, 191), newV("13.0.0.0", 8, 202), newOP(token_not, 201), newOP(token_not, 200),
+			newV("12.0.0.0", 8, 194), newOP(token_or, 191), newV("13.11.12.13", 27, 202), newOP(token_not, 201), newOP(token_not, 200),
 			newOP(token_or, 197),
 		},
 		// priority
