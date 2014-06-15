@@ -20,7 +20,7 @@ Priority decreases from top to bottom, and support parentheses, recommend the us
 
 level|Operator     | Associativity
 -----|-------------|-------------------
-1    |not          | right
+1    |not,!          | right
 2    |and,&&,or,&#124;&#124; | left
 
 ## Example
