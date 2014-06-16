@@ -1,5 +1,7 @@
 filter
 ======
+[![Build Status](https://travis-ci.org/GaoYusong/filter.svg?branch=master)](https://travis-ci.org/GaoYusong/filter)
+
 IP filter library inspired by pcap filter.
 
 The library is stable and strong, the coverage of test is 95.3%.
