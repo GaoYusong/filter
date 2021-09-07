@@ -18,7 +18,9 @@ Network address can be abbreviated, for instance, 192.168.1.0 is the abbreviatio
 
 ## Operator and priority
 
-Priority decreases from top to bottom, and support parentheses, recommend the use of that.
+The priority decreases from top to bottom.
+
+I recommend using parentheses.
 
 level|Operator     | Associativity
 -----|-------------|-------------------
