@@ -29,7 +29,7 @@ level|Operator     | Associativity
 
 ## Example
 
-Check whether host is a private ip address or in network address 100.0.10.0/24 but not in 100.0.10.128/25
+Is the host a private ip address or in network address 100.0.10.0/24 but not in 100.0.10.128/25?
 
 ```Go
 package main
@@ -67,7 +67,7 @@ func main() {
 ```
 
 ## Lisence
-Apache License V2.0
+Apache License v2.0
 
   
 
