@@ -6,17 +6,17 @@ IP filter library inspired by pcap filter.
 
 The library is stable and strong, the coverage of test is 95.3%.
 
-## Use It
+## How to use it
 
 set your env GOPATH
 
 go get github.com/GaoYusong/filter
 
-## Network Address
+## Network address
 
-Network address can be abbreviated, etc 192.168.1.0 is the abbreviation for 192.168.1.0/32, 192.168.1 as 192.168.1.0/24, 172.16 as 172.16.0.0/16, 10 as 10.0.0.0/8
+Network address can be abbreviated, for instance, 192.168.1.0 is the abbreviation for 192.168.1.0/32, 192.168.1 as 192.168.1.0/24, 172.16 as 172.16.0.0/16, 10 as 10.0.0.0/8
 
-## Operator and Priority
+## Operator and priority
 
 Priority decreases from top to bottom, and support parentheses, recommend the use of that.
 
@@ -66,5 +66,6 @@ func main() {
 
 ## Lisence
 Apache License V2.0
+
   
 
