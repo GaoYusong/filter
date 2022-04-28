@@ -70,7 +70,7 @@ func TestBasic(t *testing.T) {
 	if filter.GetRPN() != "10.232.64.77/32[0] 10.232.64.76/32[17] and[13] 127.0.0.2/24[33] or[30]" {
 		t.Error("get rpn fail")
 	}
-	
+
 }
 
 func TestErrorToken(t *testing.T) {
@@ -140,15 +140,15 @@ func TestFailCompile(t *testing.T) {
 		"127 or 137 and not (17))":          NewErrorToken(err_code_brackets, token_right, 23),
 		"127 or 137 and (not (17)":          NewErrorToken(err_code_brackets, token_left, 15),
 		"(127 or (137) (and (() not (17)))": NewErrorToken(err_code_brackets, token_left, 0),
-		")":     NewErrorToken(err_code_brackets, token_right, 0),
-		")123(": NewErrorToken(err_code_brackets, token_right, 0),
-		"(123(": NewErrorToken(err_code_brackets, token_left, 4),
+		")":                                 NewErrorToken(err_code_brackets, token_right, 0),
+		")123(":                             NewErrorToken(err_code_brackets, token_right, 0),
+		"(123(":                             NewErrorToken(err_code_brackets, token_left, 4),
 
 		// unknown charactor
 		"127 Or 13x7":          NewErrorToken(err_code_charactor, token_unknown, 9),
 		"127 Or e 137 and 172": NewErrorToken(err_code_charactor, token_unknown, 7),
-		"/12":  NewErrorToken(err_code_charactor, token_unknown, 0),
-		"Note": NewErrorToken(err_code_charactor, token_unknown, 3),
+		"/12":                  NewErrorToken(err_code_charactor, token_unknown, 0),
+		"Note":                 NewErrorToken(err_code_charactor, token_unknown, 3),
 
 		// err_msg_mask
 		"127.0.0.1 or 123.0.0.1/-10": NewErrorToken(err_code_mask, token_value, 13),
@@ -340,11 +340,11 @@ func TestCheck(t *testing.T) {
 	}
 }
 
-func newOP(t int, pos int) tokenT {
+func newOP(t, pos int) tokenT {
 	return tokenT{t: t, pos: pos}
 }
 
-func newV(ip string, mask int, pos int) tokenT {
+func newV(ip string, mask, pos int) tokenT {
 	ip1, err := ParseHost(ip)
 	if err != nil {
 		panic(err)
@@ -352,7 +352,7 @@ func newV(ip string, mask int, pos int) tokenT {
 	return tokenT{t: token_value, cidr: cidrT{ip: ip1, mask: (-1) << uint(32-mask)}, pos: pos}
 }
 
-func compareTokens(t1 []tokenT, t2 []tokenT) bool {
+func compareTokens(t1, t2 []tokenT) bool {
 	if len(t1) != len(t2) {
 		return false
 	}

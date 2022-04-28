@@ -160,7 +160,7 @@ var errorTokenMsg map[int]string = map[int]string{
 	err_code_token:         err_msg_token,
 }
 
-func NewErrorToken(code int, t int, pos int) error {
+func NewErrorToken(code, t, pos int) error {
 	msg := "[" + strconv.FormatInt(int64(code), 10) + "]"
 	if t != token_not_exsits {
 		msg += " token \"" + tokenOut[t] + "\" in pos " + strconv.FormatInt(int64(pos), 10)
@@ -440,7 +440,7 @@ func lexCIDR(filter *string, pos int) (tokenT, int, error) {
 	}
 }
 
-func cidrToken(rawIP []string, mask int, pos int, next_i int) (tokenT, int, error) {
+func cidrToken(rawIP []string, mask, pos, next_i int) (tokenT, int, error) {
 	cidr := cidrT{}
 	cidr.ip = 0
 
@@ -464,7 +464,7 @@ func cidrToken(rawIP []string, mask int, pos int, next_i int) (tokenT, int, erro
 	}, next_i, nil
 }
 
-func lexCIDRError(pos int, code int) (tokenT, int, error) {
+func lexCIDRError(pos, code int) (tokenT, int, error) {
 	return lexError(NewErrorToken(code, token_value, pos))
 }
 
