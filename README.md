@@ -4,17 +4,15 @@ filter
 
 IP filter library inspired by pcap filter.
 
-The library is stable and strong, the coverage of test is 95.3%.
+The library is stable and robust, with test coverage of 95.3%.
 
-## How to use it
-
-set your env GOPATH
+## Installation
 
 go get github.com/GaoYusong/filter
 
 ## Network address
 
-Network address can be abbreviated, for instance, 192.168.1.0 is the abbreviation for 192.168.1.0/32, 192.168.1 as 192.168.1.0/24, 172.16 as 172.16.0.0/16, 10 as 10.0.0.0/8
+Network addresses can be abbreviated. For instance, 192.168.1.0 is the abbreviation for 192.168.1.0/32, 192.168.1 for 192.168.1.0/24, 172.16 for 172.16.0.0/16, and 10 for 10.0.0.0/8.
 
 ## Operator and priority
 
@@ -29,7 +27,7 @@ level|Operator     | Associativity
 
 ## Example
 
-Is the host a private ip address or in network address 100.0.10.0/24 but not in 100.0.10.128/25?
+Is the host a private IP address or in the network address 100.0.10.0/24 but not in 100.0.10.128/25?
 
 ```Go
 package main
