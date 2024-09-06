@@ -70,4 +70,4 @@ func main() {
 ```
 
 ## Lisence
-Apache License v2.0
+MIT
