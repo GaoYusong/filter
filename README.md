@@ -1,31 +1,38 @@
 filter
 ======
-IP filter library inspired by pcap filter.
+A lightweight IP filter library inspired by [pcap-filter](https://www.tcpdump.org/manpages/pcap-filter.7.html).
 
-The library is stable and robust, with test coverage of 95.3%.
+The library is stable and robust, with a test coverage of 95.3%.
 
 ## Installation
 
+```bash
 go get github.com/GaoYusong/filter
+```
 
-## Network address
+## Network Addresses
 
-Network addresses can be abbreviated. For instance, 192.168.1.0 is the abbreviation for 192.168.1.0/32, 192.168.1 for 192.168.1.0/24, 172.16 for 172.16.0.0/16, and 10 for 10.0.0.0/8.
+Network addresses can be abbreviated. For example:
 
-## Operator and priority
+* 192.168.1.0 represents 192.168.1.0/32
+* 192.168.1 -> 192.168.1.0/24
+* 172.16 -> 172.16.0.0/16
+* 10 -> 10.0.0.0/8
 
-The priority decreases from top to bottom.
+## Operator and Precedence
 
-I recommend using parentheses.
+Operators are evaluated from top to bottom in decreasing order of precedence.
 
-level|Operator     | Associativity
+It is recommended to use parentheses for clarity.
+
+Level|Operator     | Associativity
 -----|-------------|-------------------
 1    |not,!          | right
 2    |and,&&,or,&#124;&#124; | left
 
 ## Example
 
-Is the host a private IP address or in the network address 100.0.10.0/24 but not in 100.0.10.128/25?
+Check if a host is either a private IP address or within the network 100.0.10.0/24, but not in 100.0.10.128/25:
 
 ```Go
 package main
@@ -64,6 +71,3 @@ func main() {
 
 ## Lisence
 Apache License v2.0
-
-  
-
